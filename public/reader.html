@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LuminaReader - Ruang Baca</title>
+  
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="/css/reader.css">
+
+  <!-- Document Rendering Libraries (CDN) -->
+  <!-- 1. PDF.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- 2. Mammoth (DOCX to HTML) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <!-- 3. JSZip (prerequisite for epub.js) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <!-- 4. Epub.js -->
+  <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
+</head>
+<body class="mode-sepia font-serif">
+  <!-- Top Navigation & Control Toolbar -->
+  <header class="reader-toolbar">
+    <div class="toolbar-left">
+      <a href="/" class="btn-back" title="Kembali ke Perpustakaan">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>Koleksi</span>
+      </a>
+      <div class="divider"></div>
+      <div class="book-info">
+        <h2 id="readerBookTitle" class="doc-title">Memuat buku...</h2>
+        <span id="readerBookAuthor" class="doc-author">...</span>
+      </div>
+    </div>
+
+    <!-- Center Page Controls (PDF / Document pagination) -->
+    <div class="toolbar-center" id="paginationControls">
+      <button id="prevPageBtn" class="tool-btn" title="Halaman Sebelumnya">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+      <div class="page-indicator">
+        <input type="number" id="currentPageInput" value="1" min="1">
+        <span>/</span>
+        <span id="totalPagesText">1</span>
+      </div>
+      <button id="nextPageBtn" class="tool-btn" title="Halaman Selanjutnya">
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
+
+    <!-- Right Controls: Settings & AI Audio Reader Toggle -->
+    <div class="toolbar-right">
+      <!-- Tombol Tetapkan Baca Terakhir (Manual Bookmark) -->
+      <button id="setBookmarkBtn" class="btn btn-bookmark" title="Tetapkan posisi ini sebagai bacaan terakhir">
+        <i class="fa-regular fa-bookmark" id="bookmarkIcon"></i>
+        <span id="bookmarkText">Tandai Baca Terakhir</span>
+      </button>
+
+      <!-- AI Read Aloud Quick Action -->
+      <button id="toggleAiTtsBtn" class="btn btn-ai-voice" title="Buka Kontrol AI Suara">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <span>AI Read-Aloud</span>
+      </button>
+
+      <!-- Zoom Controls for PDF -->
+      <div class="zoom-controls" id="zoomControls">
+        <button id="zoomOutBtn" class="tool-btn" title="Zoom Out"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+        <span id="zoomLevelText">100%</span>
+        <button id="zoomInBtn" class="tool-btn" title="Zoom In"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+      </div>
+
+      <!-- Appearance / Reading Preferences Menu -->
+      <button id="appearanceBtn" class="tool-btn" title="Pengaturan Tampilan"><i class="fa-solid fa-font"></i></button>
+      <button id="fullscreenBtn" class="tool-btn" title="Layar Penuh"><i class="fa-solid fa-expand"></i></button>
+    </div>
+  </header>
+
+  <!-- Appearance Popup Drawer -->
+  <div class="appearance-panel" id="appearancePanel">
+    <div class="panel-section">
+      <label>Tema Pembaca</label>
+      <div class="theme-picker">
+        <button class="theme-opt opt-light" data-theme="mode-light" title="Putih Bersih">Terang</button>
+        <button class="theme-opt opt-sepia active" data-theme="mode-sepia" title="Kertas Sepia (Nyaman)">Sepia</button>
+        <button class="theme-opt opt-dark" data-theme="mode-dark" title="Mode Malam">Gelap</button>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <label>Jenis Huruf</label>
+      <div class="font-picker">
+        <button class="font-opt active" data-font="font-serif">Serif (Buku)</button>
+        <button class="font-opt" data-font="font-sans">Sans-serif</button>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <label>Ukuran Font: <span id="fontSizeDisplay">18px</span></label>
+      <div class="font-size-adjuster">
+        <button id="decreaseFontBtn" class="tool-btn"><i class="fa-solid fa-minus"></i></button>
+        <input type="range" id="fontSizeSlider" min="14" max="28" value="18" step="1">
+        <button id="increaseFontBtn" class="tool-btn"><i class="fa-solid fa-plus"></i></button>
+      </div>
+    </div>
+
+    <div class="panel-section keyboard-shortcuts-section">
+      <label><i class="fa-regular fa-keyboard"></i> Pintasan Keyboard</label>
+      <div class="shortcut-list">
+        <div class="shortcut-item"><span><kbd>←</kbd> <kbd>→</kbd></span> <span>Pindah Halaman / Blok</span></div>
+        <div class="shortcut-item"><span><kbd>↑</kbd> <kbd>↓</kbd></span> <span>Scroll Halus</span></div>
+        <div class="shortcut-item"><span><kbd>Spasi</kbd></span> <span>Halaman Berikutnya</span></div>
+        <div class="shortcut-item"><span><kbd>B</kbd></span> <span>Tandai Baca Terakhir</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Smart AI Read-Aloud Floating Player Bar -->
+  <div class="ai-audio-bar" id="aiAudioBar">
+    <div class="audio-bar-inner">
+      <div class="audio-status">
+        <div class="sound-wave-icon" id="soundWaveAnim">
+          <span></span><span></span><span></span><span></span>
+        </div>
+        <div class="status-info">
+          <span class="status-badge" id="aiVoiceStatusBadge">AI Narator Siap</span>
+          <span class="now-reading-preview" id="nowReadingPreview">Klik tombol putar untuk mendengarkan bacaan</span>
+        </div>
+      </div>
+
+      <!-- Playback Controls -->
+      <div class="audio-playback-controls">
+        <button id="ttsPrevSentenceBtn" class="audio-btn" title="Kalimat Sebelumnya">
+          <i class="fa-solid fa-backward-step"></i>
+        </button>
+        <button id="ttsPlayPauseBtn" class="audio-btn btn-play" title="Putar / Jeda">
+          <i class="fa-solid fa-play"></i>
+        </button>
+        <button id="ttsNextSentenceBtn" class="audio-btn" title="Kalimat Berikutnya">
+          <i class="fa-solid fa-forward-step"></i>
+        </button>
+        <button id="ttsStopBtn" class="audio-btn" title="Hentikan Audio">
+          <i class="fa-solid fa-stop"></i>
+        </button>
+      </div>
+
+        <div class="tune-item">
+          <label><i class="fa-solid fa-microphone-lines"></i> Suara Vokal</label>
+          <select id="ttsVoiceSelect">
+            <option value="">Deteksi Otomatis (Default)</option>
+          </select>
+        </div>
+
+        <div class="tune-item">
+          <label><i class="fa-solid fa-masks-theater"></i> Gaya Baca</label>
+          <select id="ttsPersonaSelect">
+            <option value="storyteller">Storyteller (Dongeng/Novel)</option>
+            <option value="formal">Formal / Edukasi</option>
+            <option value="calm">Tenang / Meditatif</option>
+            <option value="standard">Netral Standar</option>
+          </select>
+        </div>
+
+        <div class="tune-item">
+          <label><i class="fa-solid fa-gauge-high"></i> Kecepatan</label>
+          <select id="ttsSpeedSelect">
+            <option value="0.75">0.75x</option>
+            <option value="1" selected>1.0x (Normal)</option>
+            <option value="1.25">1.25x</option>
+            <option value="1.5">1.5x</option>
+          </select>
+        </div>
+
+        <button id="closeAiAudioBarBtn" class="audio-close-btn" title="Tutup Bar Suara">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Document Container Area -->
+  <main class="reader-viewport" id="readerViewport">
+    <!-- Loading Overlay -->
+    <div class="reader-loading" id="readerLoading">
+      <div class="spinner"></div>
+      <p id="loadingMessage">Mempersiapkan buku kesayanganmu...</p>
+    </div>
+
+    <!-- Error Screen -->
+    <div class="reader-error" id="readerError" style="display: none;">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      <h3>Gagal Membuka Berkas</h3>
+      <p id="readerErrorMessage">File tidak dapat diakses atau rusak.</p>
+      <a href="/" class="btn btn-primary"><i class="fa-solid fa-arrow-left"></i> Kembali</a>
+    </div>
+
+    <!-- Render Targets based on file type -->
+    
+    <!-- 1. PDF Canvas Target -->
+    <div id="pdfViewerWrapper" class="viewer-target" style="display: none;">
+      <canvas id="pdfCanvas"></canvas>
+    </div>
+
+    <!-- 2. HTML Text Target (For DOCX, TXT, EPUB content) -->
+    <div id="textViewerWrapper" class="viewer-target" style="display: none;">
+      <div class="content-paper" id="contentPaper">
+        <!-- Rendered text / DOCX paragraphs injected here -->
+      </div>
+    </div>
+
+    <!-- 3. EPUB iframe Target -->
+    <div id="epubViewerWrapper" class="viewer-target" style="display: none;">
+      <div id="epubArea"></div>
+    </div>
+  </main>
+
+  <!-- Reading Progress Bar at Bottom of Screen -->
+  <footer class="reading-footer-progress">
+    <div class="global-progress-bar" id="globalProgressBar" style="width: 0%;"></div>
+  </footer>
+
+  <!-- Notification Toast -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Reader JavaScript Controller -->
+  <script src="/js/reader.js"></script>
+</body>
+</html>

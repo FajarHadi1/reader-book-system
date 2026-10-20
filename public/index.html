@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LuminaRead - Perpustakaan & eReader Online</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="theme-light">
+  <!-- Navbar Header -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="brand">
+        <div class="brand-logo">
+          <i class="fa-solid fa-book-open-reader"></i>
+        </div>
+        <div class="brand-text">
+          <h1>LuminaRead</h1>
+          <span class="badge-tag">Smart eReader</span>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <div class="search-bar">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="searchInput" placeholder="Cari buku berdasarkan judul, format, atau penulis...">
+        </div>
+        <button id="themeToggleBtn" class="icon-btn" title="Ganti Tema">
+          <i class="fa-regular fa-moon"></i>
+        </button>
+        <button id="openUploadModalBtn" class="btn btn-primary">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <span>Upload Buku</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Hero & Stats Banner -->
+  <main class="main-content">
+    <section class="hero-banner">
+      <div class="hero-text">
+        <h2>Perpustakaan Digital Pribadi</h2>
+        <p>Unggah dan baca dokumen buku favoritmu (PDF, DOCX, EPUB, TXT) dengan nyaman, bersih, serta didukung <strong>AI Read-Aloud</strong> berintonasi adaptif.</p>
+        
+        <div class="format-badges">
+          <span class="badge pdf"><i class="fa-solid fa-file-pdf"></i> PDF</span>
+          <span class="badge docx"><i class="fa-solid fa-file-word"></i> DOCX</span>
+          <span class="badge epub"><i class="fa-solid fa-book"></i> EPUB</span>
+          <span class="badge txt"><i class="fa-solid fa-file-lines"></i> TXT</span>
+          <span class="badge ai"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Voice Reader</span>
+        </div>
+      </div>
+      
+      <div class="hero-stats">
+        <div class="stat-card">
+          <span class="stat-number" id="totalBooksCount">0</span>
+          <span class="stat-label">Total Buku</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number" id="recentReadCount">0</span>
+          <span class="stat-label">Sedang Dibaca</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filter & Collections Section -->
+    <section class="library-section">
+      <div class="section-header">
+        <div class="header-titles">
+          <h3>Koleksi Buku</h3>
+          <p id="booksSubtitle">Semua berkas yang tersimpan di perpustakaan lokalmu</p>
+        </div>
+        <div class="filter-group">
+          <button class="filter-chip active" data-filter="all">Semua</button>
+          <button class="filter-chip" data-filter="pdf">PDF</button>
+          <button class="filter-chip" data-filter="docx">DOCX</button>
+          <button class="filter-chip" data-filter="epub">EPUB</button>
+          <button class="filter-chip" data-filter="txt">TXT</button>
+        </div>
+      </div>
+
+      <!-- Book Grid Container -->
+      <div class="book-grid" id="bookGrid">
+        <!-- Rendered dynamically via app.js -->
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" id="emptyState" style="display: none;">
+        <div class="empty-icon">
+          <i class="fa-solid fa-book-bookmark"></i>
+        </div>
+        <h4>Belum ada buku di perpustakaan</h4>
+        <p>Ayo mulai dengan mengunggah buku atau dokumen PDF, DOCX, EPUB, atau TXT pertamamu!</p>
+        <button class="btn btn-primary" onclick="document.getElementById('openUploadModalBtn').click()">
+          <i class="fa-solid fa-plus"></i> Unggah Buku Pertama
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Upload Modal -->
+  <div class="modal-backdrop" id="uploadModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <h4>Upload Buku Baru</h4>
+        </div>
+        <button class="close-btn" id="closeUploadModalBtn"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form id="uploadForm">
+        <!-- Dropzone Area -->
+        <div class="dropzone" id="dropzone">
+          <input type="file" id="fileInput" name="bookFile" accept=".pdf,.docx,.epub,.txt" required>
+          <div class="dropzone-content">
+            <i class="fa-solid fa-arrow-up-from-bracket dropzone-icon"></i>
+            <p class="dropzone-text"><strong>Tarik & lepas file buku ke sini</strong>, atau <span class="highlight-browse">pilih dari komputer</span></p>
+            <span class="dropzone-hint">Mendukung: PDF, DOCX, EPUB, TXT (Maks. 100MB)</span>
+          </div>
+          <div class="selected-file-preview" id="filePreview" style="display: none;">
+            <i class="fa-solid fa-file file-preview-icon"></i>
+            <div class="preview-details">
+              <span class="preview-name" id="previewFileName">filename.pdf</span>
+              <span class="preview-size" id="previewFileSize">0 KB</span>
+            </div>
+            <button type="button" class="remove-file-btn" id="removeFileBtn"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="bookTitleInput">Judul Buku (Opsional)</label>
+          <input type="text" id="bookTitleInput" name="title" placeholder="Kosongkan jika ingin memakai nama file asli">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="bookAuthorInput">Penulis / Pengarang</label>
+            <input type="text" id="bookAuthorInput" name="author" placeholder="Contoh: Pramoedya, J.K. Rowling">
+          </div>
+          <div class="form-group">
+            <label for="bookCategoryInput">Kategori</label>
+            <input type="text" id="bookCategoryInput" name="category" placeholder="Contoh: Novel, Sains, Modul">
+          </div>
+        </div>
+
+        <!-- Progress Bar (hidden by default) -->
+        <div class="upload-progress-container" id="uploadProgressContainer" style="display: none;">
+          <div class="progress-info">
+            <span id="uploadProgressText">Mengunggah...</span>
+            <span id="uploadPercent">0%</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progressBarFill"></div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="cancelUploadBtn">Batal</button>
+          <button type="submit" class="btn btn-primary" id="submitUploadBtn">
+            <i class="fa-solid fa-check"></i> Simpan ke Perpustakaan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Scripts -->
+  <script src="/js/app.js"></script>
+</body>
+</html>

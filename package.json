@@ -1,0 +1,26 @@
+{
+  "name": "ereader-system",
+  "version": "1.0.0",
+  "description": "Sistem website ringan untuk upload dan baca buku online dengan dukungan AI Read-Aloud",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "ereader",
+    "pdf",
+    "docx",
+    "epub",
+    "tts",
+    "reader"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "multer": "^1.4.5-lts.1",
+    "uuid": "^9.0.1"
+  }
+}

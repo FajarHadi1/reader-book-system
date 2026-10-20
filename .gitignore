@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+*.log
+
+# Runtime & User Uploads / Data
+# Jangan mengunggah file buku yang diunggah pengguna karena ukuran bisa sangat besar
+uploads/*
+!uploads/.gitkeep
+
+# Database lokal
+data/books.json
+
+# MacOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Temporary files & IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
